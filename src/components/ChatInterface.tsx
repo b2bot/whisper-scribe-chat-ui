@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/sonner';
 import { useUser } from '../contexts/UserContext';
 import { UserSelector } from './UserSelector';
 import { ChatControls } from './ChatControls';
+import { Message } from '../types/chat';
 
 const ChatInterface: React.FC = () => {
   const { messages, setMessages } = useUser();
