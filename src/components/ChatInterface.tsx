@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,21 +6,12 @@ import { MessageBubble } from './MessageBubble';
 import { FileUploader } from './FileUploader';
 import { processFileUpload } from '../utils/uploadHandler';
 import { toast } from '@/components/ui/sonner';
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-  id: string;
-  attachments?: Array<{
-    type: string;
-    name: string;
-    content?: string;
-    url?: string;
-  }>;
-}
+import { useUser } from '../contexts/UserContext';
+import { UserSelector } from './UserSelector';
+import { ChatControls } from './ChatControls';
 
 const ChatInterface: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { messages, setMessages } = useUser();
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showUploader, setShowUploader] = useState(false);
@@ -51,8 +41,8 @@ const ChatInterface: React.FC = () => {
   const handleSendMessage = async () => {
     if (input.trim() === '' && recordedChunks.length === 0) return;
     
-    const newMessage: Message = {
-      role: 'user',
+    const newMessage = {
+      role: 'user' as const,
       content: input,
       id: generateId()
     };
@@ -79,7 +69,7 @@ const ChatInterface: React.FC = () => {
       
       // Add assistant's response
       setMessages(prev => [...prev, {
-        role: 'assistant',
+        role: 'assistant' as const,
         content: data.reply || "I'm sorry, I couldn't process that request.",
         id: generateId()
       }]);
@@ -89,7 +79,7 @@ const ChatInterface: React.FC = () => {
       
       // Add error response
       setMessages(prev => [...prev, {
-        role: 'assistant',
+        role: 'assistant' as const,
         content: "I'm sorry, there was an error processing your message. Please try again.",
         id: generateId()
       }]);
@@ -284,8 +274,10 @@ const ChatInterface: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex justify-between items-center">
+        <UserSelector />
         <h1 className="text-xl font-semibold text-center">Chat Assistant</h1>
+        <ChatControls />
       </div>
       
       <div 

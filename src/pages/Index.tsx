@@ -1,11 +1,14 @@
 
 import ChatInterface from "@/components/ChatInterface";
+import { UserProvider } from "../contexts/UserContext";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <ChatInterface />
-    </div>
+    <UserProvider>
+      <div className="min-h-screen bg-background">
+        <ChatInterface />
+      </div>
+    </UserProvider>
   );
 };
 
