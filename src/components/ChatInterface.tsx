@@ -287,8 +287,8 @@ const ChatInterface: React.FC = () => {
       >
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <p className="text-lg font-medium">Welcome to the AI Assistant</p>
-            <p className="text-sm">Start a conversation or upload files</p>
+            <p className="text-lg font-medium">Olá, tudo bem?</p>
+            <p className="text-sm">Estou aqui para te ajudar com insights, tarefas e estratégias de marketing para a Leadclinic. Fale comigo como um colega de equipe.</p>
           </div>
         ) : (
           messages.map(message => (
