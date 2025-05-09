@@ -1,4 +1,3 @@
-
 interface UploadResult {
   success: boolean;
   content?: string;
@@ -32,12 +31,8 @@ export const processFileUpload = async (
       method: 'POST',
       body: formData,
       mode: 'cors',
-      credentials: 'include',
-      headers: {
-        // Do not set Content-Type header for FormData
-        // Browser will automatically set the correct boundary
-        'Accept': 'application/json',
-      },
+      credentials: 'include'
+      // 🚫 Removido o bloco headers
     });
     
     console.log('Response status:', response.status);
