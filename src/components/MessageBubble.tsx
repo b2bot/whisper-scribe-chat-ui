@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { FileAudio, FileImage, FileVideo, File } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface Attachment {
   type: string;
@@ -62,7 +63,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {content && (
             <div className="mt-2 p-2 bg-black/20 rounded-md">
               <p className="text-xs font-medium">Transcription:</p>
-              <p className="text-sm">{content}</p>
+              <ReactMarkdown className="prose dark:prose-invert text-sm max-w-none">{content}</ReactMarkdown>
             </div>
           )}
         </div>
