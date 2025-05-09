@@ -22,14 +22,14 @@ export const ChatControls: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={startNewChat}>
-          New Chat
+          Novo chat
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={clearHistory}
           className="text-destructive focus:text-destructive"
         >
           <Trash className="h-4 w-4 mr-2" />
-          Clear History
+          Limpar Histórico
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
