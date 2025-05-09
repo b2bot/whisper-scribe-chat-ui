@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
     try {
       const file = files.file;
-      const type = fields.type;
+      const type = fields.type?.toString();
 
       if (!file || Array.isArray(file)) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -39,8 +39,8 @@ export default async function handler(req, res) {
         type,
       });
     } catch (err) {
-      console.error('Processing error:', err);
-      return res.status(500).json({ error: 'File processing failed' });
+      console.error('Error reading file:', err);
+      return res.status(500).json({ error: 'Failed to process file' });
     }
   });
 }
