@@ -148,10 +148,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         
         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
         <p className="text-sm font-medium mb-1">
-          Drag & drop files here or click to select
+          Arraste e solte os arquivos aqui ou clique para selecionar
         </p>
         <p className="text-xs text-muted-foreground mb-3">
-          Supports MP3, PDF, TXT, CSV, and images
+          Suporta MP3, PDF, TXT, CSV e imagens
         </p>
         
         <Button 
@@ -159,7 +159,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
           size="sm"
           onClick={onButtonClick}
         >
-          Select Files
+          Selecionar arquivos
         </Button>
       </div>
 
