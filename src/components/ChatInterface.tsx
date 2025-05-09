@@ -277,7 +277,7 @@ const ChatInterface: React.FC = () => {
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <UserSelector />
-        <h1 className="text-xl font-semibold text-center">Assistente Leadclinic</h1>
+        <h1 className="text-xl font-semibold text-center">Max Leadclinic</h1>
         <ChatControls />
       </div>
       
