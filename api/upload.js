@@ -1,7 +1,7 @@
-// /api/upload.js
+// File: /pages/api/upload.js
 import formidable from 'formidable';
 import fs from 'fs';
-import { OpenAI } from 'openai';
+import path from 'path';
 
 export const config = {
   api: {
@@ -9,46 +9,47 @@ export const config = {
   },
 };
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-export default async function handler(req, res) {
+const handler = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+    res.setHeader('Allow', ['POST']);
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const form = formidable({ multiples: false, keepExtensions: true });
-
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error('Erro no parse:', err);
-      return res.status(500).json({ error: 'Erro ao processar upload' });
-    }
-
-    const file = files.file;
-    if (!file) {
-      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
-    }
-
-    const filePath = Array.isArray(file) ? file[0].filepath : file.filepath;
-    const mimeType = Array.isArray(file) ? file[0].mimetype : file.mimetype;
-
-    try {
-      if (mimeType.startsWith('audio/')) {
-        const transcription = await openai.audio.transcriptions.create({
-          file: fs.createReadStream(filePath),
-          model: 'whisper-1',
-        });
-        return res.status(200).json({ reply: `🎤 Áudio transcrito: ${transcription.text}` });
-      } else if (mimeType === 'application/pdf' || mimeType.startsWith('text/')) {
-        const buffer = fs.readFileSync(filePath);
-        const text = buffer.toString('utf-8');
-        return res.status(200).json({ reply: `📎 Arquivo recebido:\n\n${text.substring(0, 1000)}...` });
-      } else {
-        return res.status(415).json({ error: 'Tipo de arquivo não suportado' });
-      }
-    } catch (e) {
-      console.error('Erro no processamento:', e);
-      return res.status(500).json({ error: 'Falha ao analisar o conteúdo' });
-    }
+  const form = new formidable.IncomingForm({
+    keepExtensions: true,
+    uploadDir: path.join(process.cwd(), '/public/uploads'),
   });
-}
+
+  try {
+    // Ensure upload dir exists
+    fs.mkdirSync(form.uploadDir, { recursive: true });
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.error('Form parsing error:', err);
+        return res.status(400).json({ error: 'Error parsing the form' });
+      }
+
+      const file = files.file;
+      if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const uploadedFile = Array.isArray(file) ? file[0] : file;
+      const fileUrl = `/uploads/${path.basename(uploadedFile.filepath)}`;
+
+      console.log('File uploaded:', uploadedFile);
+
+      // You can add custom processing here if needed
+      return res.status(200).json({
+        reply: `File uploaded: ${uploadedFile.originalFilename}`,
+        url: fileUrl,
+      });
+    });
+  } catch (error) {
+    console.error('Unexpected server error:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export default handler;
