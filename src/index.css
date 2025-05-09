@@ -79,7 +79,7 @@
   }
   
   .chat-assistant {
-    @apply chat-message bg-chat-assistant text-white self-start rounded-bl-none;
+    @apply chat-message bg-chat-assistant text-foreground self-start rounded-bl-none;
   }
 
   .upload-progress {
