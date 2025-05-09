@@ -362,7 +362,7 @@ const ChatInterface: React.FC = () => {
               size="icon"
               onClick={() => setShowUploader(!showUploader)}
               disabled={isProcessing}
-              title="Upload files"
+              title="Enviar Arquivos"
             >
               <FileImage className="h-5 w-5" />
             </Button>
@@ -372,7 +372,7 @@ const ChatInterface: React.FC = () => {
               size="icon"
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isProcessing}
-              title={isRecording ? "Stop recording" : "Start recording"}
+              title={isRecording ? "Parar gravação" : "Enviar áudio"}
               className={isRecording ? "bg-red-500 text-white hover:bg-red-600 hover:text-white" : ""}
             >
               {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
