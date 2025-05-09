@@ -89,4 +89,6 @@
   .upload-progress-bar {
     @apply absolute top-0 left-0 h-full bg-primary transition-all ease-out duration-300;
   }
+  .animate-bounce-loader {
+  @apply bg-black;
 }
