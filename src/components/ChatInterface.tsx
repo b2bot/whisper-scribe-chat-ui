@@ -350,7 +350,7 @@ const ChatInterface: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Type your message..."
+              placeholder="Digite sua mensagem..."
               className="min-h-[60px] resize-none"
               disabled={isProcessing}
             />
