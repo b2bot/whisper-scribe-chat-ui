@@ -37,8 +37,14 @@ export default async function handler(req, res) {
     }
 
     try {
-      const data = fs.readFileSync(file[0].filepath, 'utf-8'); // pode ser 'binary' dependendo do tipo
-      return res.status(200).json({ content: data, url: '' });
+      const fileBuffer = fs.readFileSync(file[0].filepath);
+      const isText = file[0].mimetype?.startsWith('text/') || file[0].mimetype === 'application/json';
+
+      const content = isText
+        ? fileBuffer.toString('utf-8')
+        : `📎 File "${file[0].originalFilename}" uploaded successfully (${file[0].mimetype})`;
+
+      return res.status(200).json({ content, url: '' });
     } catch (error) {
       console.error('File read error:', error);
       return res.status(500).json({ error: 'Failed to read uploaded file' });
