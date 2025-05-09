@@ -1,5 +1,6 @@
-import { IncomingForm } from 'formidable';
-import { readFile } from 'fs/promises';
+import formidable from 'formidable';
+import fs from 'fs';
+import path from 'path';
 
 export const config = {
   api: {
@@ -9,10 +10,10 @@ export const config = {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const form = new IncomingForm({ multiples: false });
+  const form = formidable({ multiples: false });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
@@ -20,27 +21,18 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Error parsing form data' });
     }
 
+    const file = files.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
     try {
-      const file = files.file;
-      const type = fields.type?.toString();
-
-      if (!file || Array.isArray(file)) {
-        return res.status(400).json({ error: 'No file uploaded' });
-      }
-
-      const fileBuffer = await readFile(file.filepath);
-      const content = fileBuffer.toString('utf8');
-
-      console.log('Parsed content from file:', content.slice(0, 100));
-
-      return res.status(200).json({
-        success: true,
-        reply: content,
-        type,
-      });
-    } catch (err) {
-      console.error('Error reading file:', err);
-      return res.status(500).json({ error: 'Failed to process file' });
+      const data = fs.readFileSync(file[0].filepath, 'utf-8');
+      return res.status(200).json({ content: data, url: '' });
+    } catch (error) {
+      console.error('File read error:', error);
+      return res.status(500).json({ error: 'Failed to read uploaded file' });
     }
   });
 }
