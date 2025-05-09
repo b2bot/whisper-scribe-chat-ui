@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const form = new formidable.IncomingForm({ keepExtensions: true });
+  const form = formidable({ multiples: false, keepExtensions: true });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
@@ -24,13 +24,13 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Erro ao processar upload' });
     }
 
-    const file = files.file?.[0];
+    const file = files.file;
     if (!file) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
 
-    const filePath = file.filepath;
-    const mimeType = file.mimetype;
+    const filePath = Array.isArray(file) ? file[0].filepath : file.filepath;
+    const mimeType = Array.isArray(file) ? file[0].mimetype : file.mimetype;
 
     try {
       if (mimeType.startsWith('audio/')) {
@@ -41,7 +41,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ reply: `🎤 Áudio transcrito: ${transcription.text}` });
       } else if (mimeType === 'application/pdf' || mimeType.startsWith('text/')) {
         const buffer = fs.readFileSync(filePath);
-        const text = buffer.toString();
+        const text = buffer.toString('utf-8');
         return res.status(200).json({ reply: `📎 Arquivo recebido:\n\n${text.substring(0, 1000)}...` });
       } else {
         return res.status(415).json({ error: 'Tipo de arquivo não suportado' });
