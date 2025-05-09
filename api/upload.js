@@ -10,29 +10,32 @@ export const config = {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ reply: 'Method Not Allowed' });
   }
 
-  const form = formidable({ multiples: false });
+  const form = new formidable.IncomingForm({
+    keepExtensions: true,
+    maxFileSize: 20 * 1024 * 1024, // 20MB
+  });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      console.error('Form parse error:', err);
-      return res.status(500).json({ error: 'Error parsing form data' });
+      console.error('Upload error:', err);
+      return res.status(500).json({ reply: 'Failed to process file.' });
     }
 
-    const file = files.file;
-
+    const file = files.file?.[0] || files.file;
     if (!file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+      return res.status(400).json({ reply: 'No file received' });
     }
 
-    try {
-      const data = fs.readFileSync(file[0].filepath, 'utf-8');
-      return res.status(200).json({ content: data, url: '' });
-    } catch (error) {
-      console.error('File read error:', error);
-      return res.status(500).json({ error: 'Failed to read uploaded file' });
+    // Apenas para teste: ler e retornar parte do conteúdo se for .txt
+    if (file.mimetype === 'text/plain') {
+      const content = fs.readFileSync(file.filepath, 'utf8');
+      const preview = content.slice(0, 1000); // evita estourar o limite
+      return res.status(200).json({ reply: `Arquivo recebido. Conteúdo inicial:\n\n${preview}` });
     }
+
+    return res.status(200).json({ reply: `Arquivo ${file.originalFilename} recebido com sucesso.` });
   });
 }
