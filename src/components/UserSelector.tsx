@@ -72,26 +72,26 @@ export const UserSelector: React.FC = () => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>User Sessions</DropdownMenuLabel>
+            <DropdownMenuLabel>Meu Painel</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => setIsEditingNickname(true)}
               className="flex items-center gap-2"
             >
               <Edit className="h-4 w-4" />
-              <span>Edit Nickname</span>
+              <span>Nome de Usuário</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={createNewUser}
               className="flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
-              <span>New Session</span>
+              <span>Nova Sessão</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {userSessions.length > 0 && (
               <>
-                <DropdownMenuLabel>Switch Session</DropdownMenuLabel>
+                <DropdownMenuLabel>Trocar de Sessão</DropdownMenuLabel>
                 {userSessions.map((session) => (
                   <DropdownMenuItem 
                     key={session.id}
