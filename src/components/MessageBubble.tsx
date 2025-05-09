@@ -110,7 +110,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   return (
     <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div className={`${messageClass} animate-fade-in`}>
-        <p>{content}</p>
+        <ReactMarkdown className="prose dark:prose-invert text-sm max-w-none">{content}</ReactMarkdown>
         
         {attachments && attachments.length > 0 && (
           <div className="mt-3 space-y-2">
