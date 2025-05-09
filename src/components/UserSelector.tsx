@@ -50,17 +50,17 @@ export const UserSelector: React.FC = () => {
           <Input
             value={newNickname}
             onChange={(e) => setNewNickname(e.target.value)}
-            placeholder="Enter nickname"
+            placeholder="Digite seu nome"
             className="h-8 w-40"
             autoFocus
           />
-          <Button size="sm" onClick={handleSaveNickname}>Save</Button>
+          <Button size="sm" onClick={handleSaveNickname}>Salvar</Button>
           <Button 
             size="sm" 
             variant="ghost" 
             onClick={() => setIsEditingNickname(false)}
           >
-            Cancel
+            Cancelar
           </Button>
         </div>
       ) : (
