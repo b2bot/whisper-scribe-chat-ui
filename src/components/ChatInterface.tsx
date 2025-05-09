@@ -329,7 +329,7 @@ const ChatInterface: React.FC = () => {
       {showUploader && (
         <div className="p-4 border-t border-border">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-medium">Upload Files</h3>
+            <h3 className="text-sm font-medium">Upload</h3>
             <Button
               variant="ghost"
               size="sm"
