@@ -1,6 +1,5 @@
-import { useMemo } from "react";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface MessageBubbleProps {
   role: "user" | "assistant";
@@ -13,19 +12,13 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
     ? "chat-assistant markdown-content"
     : "chat-user";
 
-  const sanitizedHTML = useMemo(() => {
-    const rawHTML = marked.parse(content);
-    return DOMPurify.sanitize(rawHTML);
-  }, [content]);
-
   return (
-    <div
-      className={bubbleClass}
-      dangerouslySetInnerHTML={
-        isAssistant ? { __html: sanitizedHTML } : undefined
-      }
-    >
-      {!isAssistant && content}
+    <div className={bubbleClass}>
+      {isAssistant ? (
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      ) : (
+        content
+      )}
     </div>
   );
 }
