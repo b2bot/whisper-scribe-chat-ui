@@ -9,6 +9,12 @@ export default {
     "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
+  safelist: [
+    {
+      pattern: /prose/,
+      variants: ["md", "lg"],
+    },
+  ],
   theme: {
     container: {
       center: true,
@@ -82,7 +88,7 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-5px)" },
         },
-        "pulse": {
+        pulse: {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
@@ -92,12 +98,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "bounce-loader": "bounce-loader 0.6s infinite",
-        "pulse": "pulse 1.5s infinite",
+        pulse: "pulse 1.5s infinite",
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    require("@tailwindcss/typography"),
-  ],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
