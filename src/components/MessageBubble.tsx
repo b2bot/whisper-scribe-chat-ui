@@ -15,7 +15,9 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
   return (
     <div className={bubbleClass}>
       {isAssistant ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {content}
+        </ReactMarkdown>
       ) : (
         content
       )}
