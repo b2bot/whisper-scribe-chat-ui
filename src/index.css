@@ -92,4 +92,7 @@
   .animate-bounce-loader {
     @apply bg-black;
   }
+  .prose p {
+    margin-bottom: 1rem;
+  }
 }
