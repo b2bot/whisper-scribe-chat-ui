@@ -1,0 +1,17 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOW-FROM https://leadclinic.net"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors https://leadclinic.net https://partnerb2b.com.br"
+        }
+      ]
+    }
+  ]
+}
