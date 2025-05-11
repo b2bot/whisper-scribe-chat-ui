@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FileAudio, FileImage, FileVideo, File } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -58,12 +57,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {content && (
             <div className="mt-2 p-2 bg-black/20 rounded-md">
               <p className="text-xs font-medium">Transcrição:</p>
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]} 
-                className="prose prose-sm dark:prose-invert max-w-none text-sm"
-              >
-                {content}
-              </ReactMarkdown>
+              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {content}
+                </ReactMarkdown>
+              </div>
             </div>
           )}
         </div>
@@ -87,9 +85,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {content && (
             <div className="mt-2 p-2 bg-black/20 rounded-md">
               <p className="text-xs font-medium">Resumo do conteúdo:</p>
-              <p className="text-sm">
-                {content.length > 1000 ? `${content.substring(0, 1000)}...` : content}
-              </p>
+              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {content.length > 1000 ? `${content.substring(0, 1000)}...` : content}
+                </ReactMarkdown>
+              </div>
             </div>
           )}
         </div>
@@ -107,12 +107,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   return (
     <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div className={`${messageClass} animate-fade-in`}>
-        <ReactMarkdown 
-          remarkPlugins={[remarkGfm]}
-          className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
-        >
-          {content}
-        </ReactMarkdown>
+        <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {content}
+          </ReactMarkdown>
+        </div>
 
         {attachments && attachments.length > 0 && (
           <div className="mt-3 space-y-2">
