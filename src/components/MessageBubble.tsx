@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { FileAudio, FileImage, FileVideo, File } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Attachment {
   type: string;
@@ -56,7 +58,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {content && (
             <div className="mt-2 p-2 bg-black/20 rounded-md">
               <p className="text-xs font-medium">Transcrição:</p>
-              <ReactMarkdown className="prose dark:prose-invert text-sm max-w-none">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]} 
+                className="prose prose-sm dark:prose-invert max-w-none text-sm"
+              >
                 {content}
               </ReactMarkdown>
             </div>
@@ -102,7 +107,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   return (
     <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div className={`${messageClass} animate-fade-in`}>
-        <ReactMarkdown className="prose dark:prose-invert text-sm max-w-none whitespace-pre-wrap">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap"
+        >
           {content}
         </ReactMarkdown>
 

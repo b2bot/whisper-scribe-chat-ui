@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -12,7 +13,13 @@ export default {
   safelist: [
     {
       pattern: /prose/,
-      variants: ["md", "lg"],
+      variants: ["sm", "md", "lg", "xl", "invert", "dark", "slate"],
+    },
+    {
+      pattern: /markdown/,
+    },
+    {
+      pattern: /whitespace/,
     },
   ],
   theme: {
@@ -100,6 +107,60 @@ export default {
         "bounce-loader": "bounce-loader 0.6s infinite",
         pulse: "pulse 1.5s infinite",
       },
+      typography: (theme) => ({
+        DEFAULT: {
+          css: {
+            color: theme('colors.foreground'),
+            maxWidth: 'none',
+            a: {
+              color: theme('colors.blue.600'),
+              '&:hover': {
+                color: theme('colors.blue.800'),
+              },
+            },
+            p: {
+              marginTop: '0.75em',
+              marginBottom: '0.75em',
+            },
+            'ul, ol': {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            code: {
+              color: theme('colors.pink.600'),
+              backgroundColor: theme('colors.gray.100'),
+              padding: '0.2em 0.4em',
+              borderRadius: '0.25rem',
+            },
+            'code::before': {
+              content: 'none',
+            },
+            'code::after': {
+              content: 'none',
+            },
+            pre: {
+              backgroundColor: theme('colors.gray.100'),
+              borderRadius: '0.25rem',
+              padding: '1em',
+              overflowX: 'auto',
+            },
+            'pre code': {
+              backgroundColor: 'transparent',
+              padding: '0',
+              color: 'inherit',
+            },
+            img: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+          },
+        },
+        sm: {
+          css: {
+            fontSize: '0.9rem',
+          }
+        },
+      }),
     },
   },
   plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
