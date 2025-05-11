@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FileAudio, FileImage, FileVideo, File } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -57,7 +58,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {content && (
             <div className="mt-2 p-2 bg-black/20 rounded-md">
               <p className="text-xs font-medium">Transcrição:</p>
-              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+              <div className="prose prose-sm dark:prose-invert max-w-none markdown-content">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}
                 </ReactMarkdown>
@@ -85,7 +86,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {content && (
             <div className="mt-2 p-2 bg-black/20 rounded-md">
               <p className="text-xs font-medium">Resumo do conteúdo:</p>
-              <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+              <div className="prose prose-sm dark:prose-invert max-w-none markdown-content">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content.length > 1000 ? `${content.substring(0, 1000)}...` : content}
                 </ReactMarkdown>
@@ -107,7 +108,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   return (
     <div className={`flex ${role === 'user' ? 'justify-end' : 'justify-start'}`}>
       <div className={`${messageClass} animate-fade-in`}>
-        <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+        <div className="prose prose-sm dark:prose-invert max-w-none markdown-content">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {content}
           </ReactMarkdown>

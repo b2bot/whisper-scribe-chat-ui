@@ -21,6 +21,11 @@ export default {
     {
       pattern: /whitespace/,
     },
+    /* Add explicit safelisting for heading and text formatting classes */
+    'font-bold',
+    'font-semibold',
+    'text-foreground',
+    'text-white',
   ],
   theme: {
     container: {
@@ -119,12 +124,24 @@ export default {
               },
             },
             p: {
-              marginTop: '0.75em',
-              marginBottom: '0.75em',
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
             },
             'ul, ol': {
               marginTop: '0.5em',
               marginBottom: '0.5em',
+              paddingLeft: '1.5em',
+            },
+            'li': {
+              marginBottom: '0.25em',
+            },
+            'h1, h2, h3, h4, h5, h6': {
+              fontWeight: '700',
+              color: 'inherit',
+            },
+            'b, strong': {
+              fontWeight: '700',
+              color: 'inherit',
             },
             code: {
               color: theme('colors.pink.600'),
@@ -153,11 +170,31 @@ export default {
               marginTop: '0.5em',
               marginBottom: '0.5em',
             },
+            // Ensure proper spacing between list items
+            'ol > li': {
+              paddingLeft: '0.25em',
+            },
+            'ul > li': {
+              paddingLeft: '0.25em',
+            },
+            // Fix excess line breaks in numbered sections
+            'ol > li > p': {
+              marginTop: '0.2em',
+              marginBottom: '0.2em',
+            },
           },
         },
         sm: {
           css: {
             fontSize: '0.9rem',
+            p: {
+              marginTop: '0.5em',
+              marginBottom: '0.5em',
+            },
+            'h1, h2, h3, h4': {
+              marginTop: '0.75em',
+              marginBottom: '0.5em',
+            },
           }
         },
       }),

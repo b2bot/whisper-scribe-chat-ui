@@ -96,47 +96,100 @@
 
 /* Enhanced Markdown Styling */
 @layer utilities {
+  /* Base prose styles */
   .prose {
     @apply text-foreground;
   }
   
-  .prose p {
-    @apply my-2;
+  /* Common text formatting styles */
+  .prose p,
+  .chat-user .prose p,
+  .chat-assistant .prose p {
+    @apply my-1.5;
+  }
+  
+  /* Fix for paragraph spacing */
+  .markdown-content p {
+    margin-bottom: 0.75rem;
     white-space: pre-wrap;
   }
   
+  .markdown-content p:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Lists styling improvements */
   .prose ul {
-    @apply list-disc pl-5 my-2 space-y-1;
+    @apply list-disc pl-5 my-1.5 space-y-1;
   }
   
   .prose ol {
-    @apply list-decimal pl-5 my-2 space-y-1;
+    @apply list-decimal pl-5 my-1.5 space-y-1;
   }
   
+  /* Ensuring list items have proper spacing */
   .prose li {
-    @apply ml-2;
+    @apply ml-1 mb-1;
   }
   
+  .prose li p {
+    @apply my-0.5;
+  }
+  
+  /* Fix heading formatting and contrast - explicitly setting colors */
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    @apply font-bold text-foreground;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+  }
+  
+  /* Ensure proper heading sizes */
   .prose h1 {
-    @apply text-2xl font-bold my-4;
+    @apply text-2xl font-bold;
   }
   
   .prose h2 {
-    @apply text-xl font-bold my-3;
+    @apply text-xl font-bold;
   }
   
   .prose h3 {
-    @apply text-lg font-semibold my-2;
+    @apply text-lg font-semibold;
   }
   
   .prose h4 {
-    @apply font-semibold my-1;
+    @apply text-base font-semibold;
   }
   
+  /* Bold text and strong formatting - fixing the contrast issues */
+  .prose strong,
+  .prose b {
+    @apply font-bold text-foreground;
+  }
+  
+  /* Special handling for user messages with white text */
+  .chat-user .prose strong,
+  .chat-user .prose b,
+  .chat-user .prose h1,
+  .chat-user .prose h2,
+  .chat-user .prose h3,
+  .chat-user .prose h4,
+  .chat-user .prose h5,
+  .chat-user .prose h6 {
+    @apply font-bold text-white;
+  }
+  
+  /* Blockquotes */
   .prose blockquote {
     @apply border-l-4 border-muted pl-4 italic my-2;
   }
   
+  /* Code blocks */
   .prose pre {
     @apply bg-secondary p-3 rounded-md overflow-x-auto my-2 text-sm;
   }
@@ -149,12 +202,14 @@
     @apply bg-transparent p-0;
   }
   
+  /* Links */
   .prose a {
     @apply text-blue-600 hover:underline;
   }
   
+  /* Tables */
   .prose table {
-    @apply border-collapse my-4 w-full;
+    @apply border-collapse my-2 w-full;
   }
   
   .prose table th {
@@ -165,10 +220,12 @@
     @apply border border-border px-4 py-2;
   }
   
+  /* Images */
   .prose img {
     @apply max-w-full rounded-md my-2;
   }
   
+  /* Horizontal rules */
   .prose hr {
     @apply my-4 border-t border-border;
   }
@@ -192,15 +249,6 @@
     @apply text-sm leading-relaxed;
   }
   
-  .chat-user .prose p,
-  .chat-assistant .prose p {
-    @apply mb-2 last:mb-0;
-  }
-  
-  .chat-user .prose {
-    @apply text-white;
-  }
-  
   .chat-user .prose a {
     @apply text-white underline;
   }
@@ -209,7 +257,38 @@
     @apply bg-white/20 text-white;
   }
   
+  /* Numbered list handling */
+  .prose ol li {
+    display: list-item;
+    margin-left: 1em;
+    padding-left: 0.5em;
+  }
+  
+  /* Spacing between numbered items and their contents */
+  .prose ol li::marker {
+    color: currentColor;
+    font-weight: 500;
+  }
+  
+  /* Fix whitespace handling */
   .whitespace-pre-wrap {
     white-space: pre-wrap;
+  }
+  
+  /* Additional class to control markdown content specifically */
+  .markdown-content {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  
+  /* Reducing excessive spacing between markdown elements */
+  .markdown-content > *:first-child {
+    margin-top: 0;
+  }
+  
+  .markdown-content > *:last-child {
+    margin-bottom: 0;
   }
 }
