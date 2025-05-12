@@ -90,12 +90,12 @@ export const processFileUpload = async (
   }
 };
 
-// New function to handle sending message with files
+// Function to handle sending message with files
 export const sendMessageWithFiles = async (
   message: string,
   files: File[],
   apiEndpoint: string
-): Promise<{success: boolean, error?: string}> => {
+): Promise<{success: boolean, error?: string, fileContent?: string}> => {
   console.log(`Sending message with ${files.length} files`);
   
   try {
@@ -131,7 +131,16 @@ export const sendMessageWithFiles = async (
       };
     }
     
-    return { success: true };
+    // Collect file contents to pass to the AI assistant
+    const fileContents = results
+      .map(result => result.content)
+      .filter(content => content && content.length > 0)
+      .join('\n\n');
+    
+    return { 
+      success: true,
+      fileContent: fileContents 
+    };
   } catch (error) {
     console.error('Failed to send message with files:', error);
     return {

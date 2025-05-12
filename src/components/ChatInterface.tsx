@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -57,6 +56,8 @@ const ChatInterface: React.FC = () => {
     setIsProcessing(true);
     
     try {
+      let fileContent = '';
+      
       // If we have files, send the message with files
       if (hasFiles) {
         // Create the user message with attachments
@@ -91,6 +92,9 @@ const ChatInterface: React.FC = () => {
           return;
         }
         
+        // Store file content to send to assistant
+        fileContent = result.fileContent || '';
+        
         // Clear files after successful upload
         setSelectedFiles([]);
         setShowUploader(false);
@@ -123,7 +127,8 @@ const ChatInterface: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             message: input.trim(),
-            history: messages.map(m => ({ role: m.role, content: m.content }))
+            history: messages.map(m => ({ role: m.role, content: m.content })),
+            fileContent: fileContent // Pass the extracted file content
           }),
         });
         
@@ -188,6 +193,7 @@ const ChatInterface: React.FC = () => {
     }
   };
   
+  // Process audio recording
   const processAudioRecording = async () => {
     setIsProcessing(true);
     try {
@@ -242,7 +248,8 @@ const ChatInterface: React.FC = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               message: messageText,
-              history: messages.map(m => ({ role: m.role, content: m.content }))
+              history: messages.map(m => ({ role: m.role, content: m.content })),
+              fileContent: result.content // Pass the extracted file content
             }),
           });
           

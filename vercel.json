@@ -31,6 +31,10 @@
     "api/upload.js": {
       "maxDuration": 60,
       "memory": 1024
+    },
+    "api/chat.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   }
 }

@@ -1,6 +1,7 @@
 
 import formidable from 'formidable';
 import fs from 'fs';
+import pdfParse from 'pdf-parse';
 
 export const config = {
   api: {
@@ -8,6 +9,34 @@ export const config = {
     responseLimit: '20mb',
   },
 };
+
+async function extractFileContent(file) {
+  try {
+    const fileBuffer = fs.readFileSync(file.filepath);
+    
+    // Check file type and extract content accordingly
+    if (file.mimetype === 'application/pdf') {
+      // Extract text from PDF
+      const pdfData = await pdfParse(fileBuffer);
+      return pdfData.text;
+    } else if (file.mimetype?.startsWith('text/') || file.mimetype === 'application/json') {
+      // For text files, just return the content
+      return fileBuffer.toString('utf8');
+    } else if (file.mimetype?.startsWith('audio/')) {
+      // For audio files we would ideally transcribe them, but for now just notify
+      return `[Audio file uploaded: ${file.originalFilename}]`;
+    } else if (file.mimetype?.startsWith('image/')) {
+      // For images we would ideally describe them, but for now just notify
+      return `[Image file uploaded: ${file.originalFilename}]`;
+    }
+    
+    // Default case for other file types
+    return `[File uploaded: ${file.originalFilename} (${file.mimetype})]`;
+  } catch (error) {
+    console.error('Error extracting file content:', error);
+    return `[Error extracting content from ${file.originalFilename}]`;
+  }
+}
 
 export default async function handler(req, res) {
   // CORS HEADERS - More permissive for development/testing
@@ -45,29 +74,23 @@ export default async function handler(req, res) {
       }
 
       try {
-        const fileBuffer = fs.readFileSync(file[0].filepath);
-        const isText = file[0].mimetype?.startsWith('text/') || 
-                       file[0].mimetype === 'application/json' ||
-                       file[0].mimetype === 'application/pdf';
-
-        let content = isText
-          ? `Content from "${file[0].originalFilename}" (${file[0].mimetype})`
-          : `📎 File "${file[0].originalFilename}" uploaded successfully (${file[0].mimetype})`;
-
+        // Extract content from file
+        const fileContent = await extractFileContent(file[0]);
+        
         // For demonstration, create a dummy URL pointing to a public file
         // In a real app, you'd upload to a storage service and return the URL
-        const url = isText ? '' : `/dummy-url/${file[0].originalFilename}`;
+        const url = `/dummy-url/${file[0].originalFilename}`;
 
         return res.status(200).json({ 
           success: true, 
-          content, 
+          content: fileContent, 
           url,
           // Include the user message in the response if provided
           message: message || '' 
         });
       } catch (error) {
-        console.error('File read error:', error);
-        return res.status(500).json({ error: 'Failed to read uploaded file' });
+        console.error('File processing error:', error);
+        return res.status(500).json({ error: 'Failed to process uploaded file' });
       }
     });
   } catch (error) {

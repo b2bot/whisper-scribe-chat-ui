@@ -1,3 +1,4 @@
+
 import { OpenAI } from "openai";
 
 const openai = new OpenAI({
@@ -21,12 +22,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body;
+    const { message, fileContent } = req.body;
+    
+    // Create a more contextual message if file content is available
+    const fullMessage = fileContent 
+      ? `${message}\n\nContent from uploaded file:\n${fileContent}`
+      : message;
 
     const thread = await openai.beta.threads.create();
     await openai.beta.threads.messages.create(thread.id, {
       role: "user",
-      content: message,
+      content: fullMessage,
     });
 
     const run = await openai.beta.threads.runs.create(thread.id, {
