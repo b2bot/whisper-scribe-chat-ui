@@ -5,6 +5,7 @@ import fs from 'fs';
 export const config = {
   api: {
     bodyParser: false,
+    responseLimit: '20mb',
   },
 };
 
@@ -25,8 +26,9 @@ export default async function handler(req, res) {
 
   try {
     const form = formidable({ 
-      multiples: false,
-      maxFileSize: 10 * 1024 * 1024, // 10MB limit
+      multiples: true,
+      maxFileSize: 15 * 1024 * 1024, // 15MB limit
+      maxFieldsSize: 20 * 1024 * 1024, // 20MB total form limit
     });
 
     form.parse(req, async (err, fields, files) => {

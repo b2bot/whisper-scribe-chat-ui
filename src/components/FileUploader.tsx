@@ -27,6 +27,16 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
     'image/gif',
   ];
 
+  // Max file size in bytes (15MB)
+  const MAX_FILE_SIZE = 15 * 1024 * 1024;
+
+  // Format file size
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   // Check if file type is supported
   const isFileSupported = (file: File) => {
     // Check by MIME type
@@ -44,6 +54,11 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
            extension === 'gif';
   };
 
+  // Check if file size is within limit
+  const isFileSizeValid = (file: File) => {
+    return file.size <= MAX_FILE_SIZE;
+  };
+
   // Get file icon based on type
   const getFileIcon = (file: File) => {
     if (file.type.startsWith('audio/') || file.name.endsWith('.mp3')) {
@@ -59,15 +74,22 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
-      const unsupportedFiles = files.filter(file => !isFileSupported(file));
       
+      // Check for unsupported file types
+      const unsupportedFiles = files.filter(file => !isFileSupported(file));
       if (unsupportedFiles.length > 0) {
         toast.error(`Unsupported file type(s): ${unsupportedFiles.map(f => f.name).join(', ')}`);
-        const supportedFiles = files.filter(file => isFileSupported(file));
-        setSelectedFiles(supportedFiles);
-      } else {
-        setSelectedFiles(files);
       }
+      
+      // Check for files that exceed size limit
+      const oversizedFiles = files.filter(file => !isFileSizeValid(file));
+      if (oversizedFiles.length > 0) {
+        toast.error(`File(s) exceed the 15MB limit: ${oversizedFiles.map(f => `${f.name} (${formatFileSize(f.size)})`).join(', ')}`);
+      }
+      
+      // Filter valid files
+      const validFiles = files.filter(file => isFileSupported(file) && isFileSizeValid(file));
+      setSelectedFiles(validFiles);
     }
   };
 
@@ -91,15 +113,22 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
-      const unsupportedFiles = files.filter(file => !isFileSupported(file));
       
+      // Check for unsupported file types
+      const unsupportedFiles = files.filter(file => !isFileSupported(file));
       if (unsupportedFiles.length > 0) {
         toast.error(`Unsupported file type(s): ${unsupportedFiles.map(f => f.name).join(', ')}`);
-        const supportedFiles = files.filter(file => isFileSupported(file));
-        setSelectedFiles(supportedFiles);
-      } else {
-        setSelectedFiles(files);
       }
+      
+      // Check for files that exceed size limit
+      const oversizedFiles = files.filter(file => !isFileSizeValid(file));
+      if (oversizedFiles.length > 0) {
+        toast.error(`File(s) exceed the 15MB limit: ${oversizedFiles.map(f => `${f.name} (${formatFileSize(f.size)})`).join(', ')}`);
+      }
+      
+      // Filter valid files
+      const validFiles = files.filter(file => isFileSupported(file) && isFileSizeValid(file));
+      setSelectedFiles(validFiles);
     }
   };
 
@@ -152,7 +181,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
           Arraste e solte os arquivos aqui ou clique para selecionar
         </p>
         <p className="text-xs text-muted-foreground mb-3">
-          Suporta MP3, PDF, TXT, CSV e imagens
+          Suporta MP3, PDF, TXT, CSV e imagens (máx. 15MB)
         </p>
         
         <Button 
@@ -176,6 +205,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
                 {getFileIcon(file)}
                 <span className="text-sm truncate" style={{ maxWidth: '200px' }}>
                   {file.name}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  ({formatFileSize(file.size)})
                 </span>
               </div>
               <Button

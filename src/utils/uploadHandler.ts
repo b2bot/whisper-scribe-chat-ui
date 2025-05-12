@@ -12,9 +12,18 @@ export const processFileUpload = async (
   apiEndpoint: string,
   message?: string
 ): Promise<UploadResult> => {
-  console.log('Processing file upload:', file.name, 'type:', file.type);
+  console.log('Processing file upload:', file.name, 'type:', file.type, 'size:', Math.round(file.size / 1024), 'KB');
   
   try {
+    // Check file size before attempting upload (client-side validation)
+    if (file.size > 15 * 1024 * 1024) { // 15MB limit
+      console.error('File too large:', file.name, 'size:', Math.round(file.size / 1024), 'KB');
+      return {
+        success: false,
+        error: `File too large (${Math.round(file.size / (1024 * 1024))}MB). Maximum size is 15MB.`,
+      };
+    }
+    
     const formData = new FormData();
     formData.append('file', file);
     
@@ -39,8 +48,26 @@ export const processFileUpload = async (
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorText;
+      try {
+        // Try to parse the error as JSON
+        const errorData = await response.json();
+        errorText = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      } catch (e) {
+        // If JSON parsing fails, get the error as text
+        errorText = await response.text();
+      }
+      
       console.error('Upload error response:', errorText, 'Status:', response.status);
+      
+      // Special handling for common errors
+      if (response.status === 413) {
+        return {
+          success: false,
+          error: `File too large. Maximum size is 15MB. Current file: ${Math.round(file.size / (1024 * 1024))}MB.`,
+        };
+      }
+      
       return {
         success: false,
         error: errorText || `HTTP ${response.status}: ${response.statusText}`,
