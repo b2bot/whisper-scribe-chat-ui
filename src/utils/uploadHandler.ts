@@ -43,8 +43,6 @@ export const processFileUpload = async (
     const response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
-      // Don't set mode or credentials for same-origin requests
-      // Only set them if needed for cross-origin requests
     });
 
     if (!response.ok) {
@@ -88,6 +86,57 @@ export const processFileUpload = async (
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error during upload',
+    };
+  }
+};
+
+// New function to handle sending message with files
+export const sendMessageWithFiles = async (
+  message: string,
+  files: File[],
+  apiEndpoint: string
+): Promise<{success: boolean, error?: string}> => {
+  console.log(`Sending message with ${files.length} files`);
+  
+  try {
+    if (files.length === 0) {
+      // If no files, just return success to let the regular message flow continue
+      return { success: true };
+    }
+    
+    // Check if any file exceeds the size limit
+    for (const file of files) {
+      if (file.size > 15 * 1024 * 1024) { // 15MB limit
+        return {
+          success: false,
+          error: `File too large: ${file.name} (${Math.round(file.size / (1024 * 1024))}MB). Maximum size is 15MB.`,
+        };
+      }
+    }
+    
+    // Process all files with the message
+    const results = await Promise.all(
+      files.map((file, index) => 
+        // Only send the message with the first file
+        processFileUpload(file, apiEndpoint, index === 0 ? message : undefined)
+      )
+    );
+    
+    // Check if any uploads failed
+    const failedUploads = results.filter(result => !result.success);
+    if (failedUploads.length > 0) {
+      return {
+        success: false,
+        error: failedUploads.map(r => r.error).join('; '),
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send message with files:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error processing files',
     };
   }
 };

@@ -5,13 +5,19 @@ import { Upload, X, Check, FileAudio, FileImage, File } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
 interface FileUploaderProps {
-  onFileUpload: (files: FileList, message?: string) => void;
-  message?: string;
+  selectedFiles: File[];
+  setSelectedFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  showUploader: boolean;
+  setShowUploader: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, message }) => {
+export const FileUploader: React.FC<FileUploaderProps> = ({ 
+  selectedFiles, 
+  setSelectedFiles, 
+  showUploader, 
+  setShowUploader 
+}) => {
   const [dragActive, setDragActive] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -142,18 +148,10 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle upload
-  const handleUpload = () => {
-    if (selectedFiles.length > 0) {
-      // Create a FileList-like object from the array
-      const dataTransfer = new DataTransfer();
-      selectedFiles.forEach(file => {
-        dataTransfer.items.add(file);
-      });
-      
-      onFileUpload(dataTransfer.files, message);
-      setSelectedFiles([]);
-    }
+  // Clear all selected files
+  const clearFiles = () => {
+    setSelectedFiles([]);
+    setShowUploader(false);
   };
 
   return (
@@ -222,10 +220,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, messag
           ))}
           
           <div className="flex justify-end mt-4">
-            <Button onClick={handleUpload} className="w-full">
-              <Check className="h-4 w-4 mr-2" />
-              Upload {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''}
-              {message ? ' with message' : ''}
+            <Button onClick={clearFiles} variant="outline" className="w-full">
+              <X className="h-4 w-4 mr-2" />
+              Clear files
             </Button>
           </div>
         </div>
