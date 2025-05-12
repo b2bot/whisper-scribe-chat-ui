@@ -36,6 +36,7 @@ export default async function handler(req, res) {
       }
 
       const file = files.file;
+      const message = fields.message ? fields.message[0] : '';
 
       if (!file || !file[0]) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -47,7 +48,7 @@ export default async function handler(req, res) {
                        file[0].mimetype === 'application/json' ||
                        file[0].mimetype === 'application/pdf';
 
-        const content = isText
+        let content = isText
           ? `Content from "${file[0].originalFilename}" (${file[0].mimetype})`
           : `📎 File "${file[0].originalFilename}" uploaded successfully (${file[0].mimetype})`;
 
@@ -55,7 +56,13 @@ export default async function handler(req, res) {
         // In a real app, you'd upload to a storage service and return the URL
         const url = isText ? '' : `/dummy-url/${file[0].originalFilename}`;
 
-        return res.status(200).json({ success: true, content, url });
+        return res.status(200).json({ 
+          success: true, 
+          content, 
+          url,
+          // Include the user message in the response if provided
+          message: message || '' 
+        });
       } catch (error) {
         console.error('File read error:', error);
         return res.status(500).json({ error: 'Failed to read uploaded file' });

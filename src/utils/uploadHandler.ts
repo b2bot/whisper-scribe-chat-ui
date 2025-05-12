@@ -4,17 +4,24 @@ interface UploadResult {
   content?: string;
   url?: string;
   error?: string;
+  message?: string;
 }
 
 export const processFileUpload = async (
   file: File,
-  apiEndpoint: string
+  apiEndpoint: string,
+  message?: string
 ): Promise<UploadResult> => {
   console.log('Processing file upload:', file.name, 'type:', file.type);
-
+  
   try {
     const formData = new FormData();
     formData.append('file', file);
+    
+    // Add the message to the form data if provided
+    if (message && message.trim()) {
+      formData.append('message', message.trim());
+    }
     
     // Use the current domain for API calls instead of hardcoded URLs
     const currentDomain = window.location.origin;
@@ -47,6 +54,7 @@ export const processFileUpload = async (
       success: true,
       content: data.content || '',
       url: data.url || '',
+      message: data.message || '',
     };
   } catch (error) {
     console.error('Upload failed:', error);

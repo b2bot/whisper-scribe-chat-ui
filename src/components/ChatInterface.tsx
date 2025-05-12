@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -89,14 +90,16 @@ const ChatInterface: React.FC = () => {
     }
   };
   
-  // Handle file upload
-  const handleFileUpload = async (files: FileList) => {
+  // Handle file upload with optional message
+  const handleFileUpload = async (files: FileList, message?: string) => {
     setShowUploader(false);
     setIsProcessing(true);
     setUploadProgress(0);
     
     try {
-      // Create a message for the files being uploaded
+      // Create a message for the files being uploaded with optional message text
+      const userMessage = message?.trim() || `Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`;
+      
       const attachments = Array.from(files).map(file => ({
         type: file.type,
         name: file.name,
@@ -104,7 +107,7 @@ const ChatInterface: React.FC = () => {
       
       const uploadMessage: Message = {
         role: 'user',
-        content: `Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`,
+        content: userMessage,
         id: generateId(),
         attachments
       };
@@ -119,7 +122,8 @@ const ChatInterface: React.FC = () => {
         
         const result = await processFileUpload(
           file, 
-          'https://max-zeta-eight.vercel.app/api/upload'
+          'https://max-zeta-eight.vercel.app/api/upload',
+          i === 0 ? message : undefined // Only send the message with the first file
         );
         
         if (result.error) {
@@ -146,12 +150,40 @@ const ChatInterface: React.FC = () => {
       
       setUploadProgress(100);
       
-      // Add assistant response about the files
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `I've processed ${files.length} file${files.length > 1 ? 's' : ''}. How can I help you with them?`,
-        id: generateId()
-      }]);
+      // Only add assistant response if no message was provided with the files
+      if (!message?.trim()) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `I've processed ${files.length} file${files.length > 1 ? 's' : ''}. How can I help you with them?`,
+          id: generateId()
+        }]);
+      } else {
+        // If there was a message, treat it like a regular message and send to API
+        try {
+          const response = await fetch('https://max-zeta-eight.vercel.app/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              message: message.trim(),
+              history: messages.map(m => ({ role: m.role, content: m.content }))
+            }),
+          });
+          
+          if (!response.ok) throw new Error('Failed to send message');
+          
+          const data = await response.json();
+          
+          setMessages(prev => [...prev, {
+            role: 'assistant' as const,
+            content: data.reply || "I'm sorry, I couldn't process that request.",
+            id: generateId()
+          }]);
+        } catch (error) {
+          console.error('Error sending message:', error);
+          toast.error('Failed to process message. Please try again.');
+        }
+      }
+      
     } catch (error) {
       console.error('Error uploading files:', error);
       toast.error('Failed to upload files. Please try again.');
@@ -211,51 +243,15 @@ const ChatInterface: React.FC = () => {
       const audioBlob = new Blob(chunks, { type: 'audio/mp3' });
       const file = new File([audioBlob], 'recording.mp3', { type: 'audio/mp3' });
       
-      // Create a message for the recording
-      const uploadMessage: Message = {
-        role: 'user',
-        content: 'Voice message',
-        id: generateId(),
-        attachments: [{
-          type: file.type,
-          name: file.name,
-        }]
-      };
+      // Get the current message text for the audio recording
+      const messageText = input.trim();
+      setInput('');
       
-      setMessages(prev => [...prev, uploadMessage]);
+      // Handle the audio file upload with optional message
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      await handleFileUpload(dataTransfer.files, messageText);
       
-      // Process the audio file
-      const result = await processFileUpload(
-        file, 
-        'https://max-zeta-eight.vercel.app/api/upload'
-      );
-      
-      if (result.error) {
-        toast.error(`Error processing recording: ${result.error}`);
-        return;
-      }
-      
-      // Update the message with transcription
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === uploadMessage.id 
-            ? {
-                ...msg,
-                content: result.content || 'Voice message',
-                attachments: msg.attachments?.map(att => 
-                  ({ ...att, content: result.content, url: result.url })
-                )
-              }
-            : msg
-        )
-      );
-      
-      // Add assistant response
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `I've processed your voice message. ${result.content ? "Here's what I heard: " + result.content : ""}`,
-        id: generateId()
-      }]);
     } catch (error) {
       console.error('Error processing audio:', error);
       toast.error('Failed to process audio. Please try again.');
@@ -339,7 +335,7 @@ const ChatInterface: React.FC = () => {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <FileUploader onFileUpload={handleFileUpload} />
+          <FileUploader onFileUpload={(files) => handleFileUpload(files, input)} />
         </div>
       )}
       

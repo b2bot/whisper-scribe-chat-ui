@@ -5,10 +5,11 @@ import { Upload, X, Check, FileAudio, FileImage, File } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
 
 interface FileUploaderProps {
-  onFileUpload: (files: FileList) => void;
+  onFileUpload: (files: FileList, message?: string) => void;
+  message?: string;
 }
 
-export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
+export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload, message }) => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
@@ -121,7 +122,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
         dataTransfer.items.add(file);
       });
       
-      onFileUpload(dataTransfer.files);
+      onFileUpload(dataTransfer.files, message);
       setSelectedFiles([]);
     }
   };
@@ -192,6 +193,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({ onFileUpload }) => {
             <Button onClick={handleUpload} className="w-full">
               <Check className="h-4 w-4 mr-2" />
               Upload {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''}
+              {message ? ' with message' : ''}
             </Button>
           </div>
         </div>
