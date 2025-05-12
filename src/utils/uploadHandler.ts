@@ -1,3 +1,4 @@
+
 interface UploadResult {
   success: boolean;
   content?: string;
@@ -14,23 +15,28 @@ export const processFileUpload = async (
   try {
     const formData = new FormData();
     formData.append('file', file);
-
-    const response = await fetch(apiEndpoint, {
+    
+    // Use the current domain for API calls instead of hardcoded URLs
+    const currentDomain = window.location.origin;
+    const endpoint = apiEndpoint.startsWith('http') 
+      ? apiEndpoint 
+      : `${currentDomain}/api/upload`;
+    
+    console.log('Uploading to endpoint:', endpoint);
+    
+    const response = await fetch(endpoint, {
       method: 'POST',
       body: formData,
-      mode: 'cors',
-      credentials: 'include',
-      headers: {
-        Accept: 'application/json',
-      },
+      // Don't set mode or credentials for same-origin requests
+      // Only set them if needed for cross-origin requests
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Upload error response:', errorText);
+      console.error('Upload error response:', errorText, 'Status:', response.status);
       return {
         success: false,
-        error: errorText || `HTTP ${response.status}`,
+        error: errorText || `HTTP ${response.status}: ${response.statusText}`,
       };
     }
 
@@ -46,7 +52,7 @@ export const processFileUpload = async (
     console.error('Upload failed:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : 'Unknown error during upload',
     };
   }
 };
