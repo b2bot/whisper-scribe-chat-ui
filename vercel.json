@@ -23,7 +23,12 @@
         {
           "key": "Access-Control-Allow-Headers",
           "value": "X-Requested-With, Content-Type, Accept"
-        },
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
         {
           "key": "Content-Type",
           "value": "application/json; charset=utf-8"
@@ -32,10 +37,6 @@
     }
   ],
   "functions": {
-    "api/upload.js": {
-      "maxDuration": 120,
-      "memory": 3008
-    },
     "api/chat.js": {
       "maxDuration": 120,
       "memory": 3008
