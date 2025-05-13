@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,8 +56,6 @@ const ChatInterface: React.FC = () => {
     setIsProcessing(true);
     
     try {
-      let fileContent = '';
-      
       // If we have files, send the message with files
       if (hasFiles) {
         // Create the user message with attachments
@@ -90,12 +86,9 @@ const ChatInterface: React.FC = () => {
         );
         
         if (!result.success) {
-          toast.error(`Erro ao enviar arquivos: ${result.error}`);
+          toast.error(`Error sending files: ${result.error}`);
           return;
         }
-        
-        // Store file content to send to assistant
-        fileContent = result.fileContent || '';
         
         // Clear files after successful upload
         setSelectedFiles([]);
@@ -108,7 +101,6 @@ const ChatInterface: React.FC = () => {
             content: `I've processed ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''}. How can I help you with them?`,
             id: generateId()
           }]);
-          setIsProcessing(false);
           return;
         }
       } else if (hasMessage) {
@@ -130,32 +122,13 @@ const ChatInterface: React.FC = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             message: input.trim(),
-            history: messages.map(m => ({ role: m.role, content: m.content })),
-            fileContent: fileContent // Pass the extracted file content
+            history: messages.map(m => ({ role: m.role, content: m.content }))
           }),
         });
         
-        if (!response.ok) {
-          const errorData = await response.text();
-          let errorMessage;
-          try {
-            const parsedError = JSON.parse(errorData);
-            errorMessage = parsedError.error || 'Failed to send message';
-          } catch (e) {
-            errorMessage = 'Failed to send message';
-          }
-          throw new Error(errorMessage);
-        }
+        if (!response.ok) throw new Error('Failed to send message');
         
-        // Parse the response once
-        const responseText = await response.text();
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (error) {
-          console.error('Failed to parse API response:', error);
-          throw new Error('Invalid response from server');
-        }
+        const data = await response.json();
         
         // Add assistant's response
         setMessages(prev => [...prev, {
@@ -166,7 +139,7 @@ const ChatInterface: React.FC = () => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Falha ao enviar mensagem. Por favor, tente novamente.');
+      toast.error('Failed to send message. Please try again.');
       
       // Add error response
       setMessages(prev => [...prev, {
@@ -199,10 +172,10 @@ const ChatInterface: React.FC = () => {
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
-      toast.success('Gravação iniciada');
+      toast.success('Recording started');
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast.error('Não foi possível acessar o microfone. Verifique as permissões.');
+      toast.error('Could not access microphone. Please check permissions.');
     }
   };
   
@@ -210,11 +183,10 @@ const ChatInterface: React.FC = () => {
     if (mediaRecorder) {
       mediaRecorder.stop();
       setIsRecording(false);
-      toast.success('Gravação finalizada');
+      toast.success('Recording stopped');
     }
   };
   
-  // Process audio recording
   const processAudioRecording = async () => {
     setIsProcessing(true);
     try {
@@ -232,9 +204,8 @@ const ChatInterface: React.FC = () => {
       // Process the audio file with the message text
       const result = await processFileUpload(file, 'https://max-zeta-eight.vercel.app/api/upload', messageText);
       
-      if (!result.success) {
-        toast.error(`Erro ao processar áudio: ${result.error}`);
-        setIsProcessing(false);
+      if (result.error) {
+        toast.error(`Error processing audio: ${result.error}`);
         return;
       }
       
@@ -262,7 +233,6 @@ const ChatInterface: React.FC = () => {
           content: `I've processed your audio recording. How can I help with it?`,
           id: generateId()
         }]);
-        setIsProcessing(false);
       } else {
         // If there was a message, process it with the API
         try {
@@ -271,32 +241,13 @@ const ChatInterface: React.FC = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               message: messageText,
-              history: messages.map(m => ({ role: m.role, content: m.content })),
-              fileContent: result.content // Pass the extracted file content
+              history: messages.map(m => ({ role: m.role, content: m.content }))
             }),
           });
           
-          if (!response.ok) {
-            const errorText = await response.text();
-            let errorMessage;
-            try {
-              const parsedError = JSON.parse(errorText);
-              errorMessage = parsedError.error || 'Failed to send message';
-            } catch (e) {
-              errorMessage = errorText || 'Failed to send message';
-            }
-            throw new Error(errorMessage);
-          }
+          if (!response.ok) throw new Error('Failed to send message');
           
-          // Parse the response text once
-          const responseText = await response.text();
-          let data;
-          try {
-            data = JSON.parse(responseText);
-          } catch (error) {
-            console.error('Failed to parse API response:', error);
-            throw new Error('Invalid response from server');
-          }
+          const data = await response.json();
           
           // Add assistant's response
           setMessages(prev => [...prev, {
@@ -306,23 +257,15 @@ const ChatInterface: React.FC = () => {
           }]);
         } catch (error) {
           console.error('Error sending message:', error);
-          toast.error('Falha ao processar mensagem com gravação. Por favor, tente novamente.');
-          
-          // Add error response to the chat
-          setMessages(prev => [...prev, {
-            role: 'assistant' as const,
-            content: "I'm sorry, there was an error processing your audio message. Please try again.",
-            id: generateId()
-          }]);
-        } finally {
-          setIsProcessing(false);
+          toast.error('Failed to process message with recording. Please try again.');
         }
       }
+      
     } catch (error) {
       console.error('Error processing audio:', error);
-      toast.error('Falha ao processar áudio. Por favor, tente novamente.');
-      setIsProcessing(false);
+      toast.error('Failed to process audio. Please try again.');
     } finally {
+      setIsProcessing(false);
       setRecordedChunks([]);
     }
   };
