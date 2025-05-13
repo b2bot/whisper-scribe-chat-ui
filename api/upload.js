@@ -1,6 +1,5 @@
 
 import formidable from 'formidable';
-import fs from 'fs';
 import pdfParse from 'pdf-parse';
 
 export const config = {
@@ -12,13 +11,19 @@ export const config = {
 
 async function extractFileContent(file) {
   try {
-    const fileBuffer = fs.readFileSync(file.filepath);
+    // Read the file contents into a buffer
+    const fileBuffer = require('fs').readFileSync(file.filepath);
     
     // Check file type and extract content accordingly
     if (file.mimetype === 'application/pdf') {
-      // Extract text from PDF
-      const pdfData = await pdfParse(fileBuffer);
-      return pdfData.text;
+      try {
+        // Extract text from PDF using the buffer directly
+        const pdfData = await pdfParse(fileBuffer);
+        return pdfData.text;
+      } catch (pdfError) {
+        console.error('Error parsing PDF:', pdfError);
+        return `[Error parsing PDF: ${file.originalFilename}]`;
+      }
     } else if (file.mimetype?.startsWith('text/') || file.mimetype === 'application/json') {
       // For text files, just return the content
       return fileBuffer.toString('utf8');

@@ -29,16 +29,24 @@ export default async function handler(req, res) {
       ? `${message}\n\nContent from uploaded file:\n${fileContent}`
       : message;
 
+    // Log the message length for debugging
+    console.log(`Processing message with length: ${fullMessage.length}`);
+    
+    // Create a thread for the conversation
     const thread = await openai.beta.threads.create();
+    
+    // Add the user message to the thread
     await openai.beta.threads.messages.create(thread.id, {
       role: "user",
       content: fullMessage,
     });
 
+    // Run the assistant on the thread
     const run = await openai.beta.threads.runs.create(thread.id, {
       assistant_id: ASSISTANT_ID,
     });
 
+    // Wait for the run to complete
     let completedRun;
     while (true) {
       completedRun = await openai.beta.threads.runs.retrieve(thread.id, run.id);
@@ -47,9 +55,11 @@ export default async function handler(req, res) {
       await new Promise((r) => setTimeout(r, 1000));
     }
 
+    // Get the assistant's response
     const messages = await openai.beta.threads.messages.list(thread.id);
     const response = messages.data.find((msg) => msg.role === "assistant");
 
+    // Return the response
     res.status(200).json({ reply: response?.content[0]?.text?.value || "Sem resposta." });
   } catch (error) {
     console.error("Erro na API:", error);

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -69,7 +68,7 @@ const ChatInterface: React.FC = () => {
         
         const userMessage: Message = {
           role: 'user',
-          content: input,
+          content: input || "File shared", // Use "File shared" if no message
           id: generateId(),
           attachments
         };
@@ -85,11 +84,12 @@ const ChatInterface: React.FC = () => {
         const result = await sendMessageWithFiles(
           input, 
           selectedFiles,
-          'https://max-zeta-eight.vercel.app/api/upload'
+          `${window.location.origin}/api/upload`
         );
         
         if (!result.success) {
           toast.error(`Erro ao enviar arquivos: ${result.error}`);
+          setIsProcessing(false);
           return;
         }
         
@@ -123,48 +123,46 @@ const ChatInterface: React.FC = () => {
       }
       
       // Send message to API for processing
-      if (hasMessage || (hasFiles && hasMessage)) {
-        const response = await fetch('https://max-zeta-eight.vercel.app/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            message: input.trim(),
-            history: messages.map(m => ({ role: m.role, content: m.content })),
-            fileContent: fileContent // Pass the extracted file content
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.text();
-          let errorMessage;
-          try {
-            const parsedError = JSON.parse(errorData);
-            errorMessage = parsedError.error || 'Failed to send message';
-          } catch (e) {
-            errorMessage = 'Failed to send message';
-          }
-          throw new Error(errorMessage);
-        }
-        
-        // Parse the response once
-        const responseText = await response.text();
-        let data;
+      if (hasMessage || (hasFiles && fileContent)) {
         try {
-          data = JSON.parse(responseText);
+          const response = await fetch(`${window.location.origin}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              message: input.trim() || "Please analyze this content",
+              history: messages.map(m => ({ role: m.role, content: m.content })),
+              fileContent: fileContent // Pass the extracted file content
+            }),
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || 'Failed to send message');
+          }
+          
+          // Parse the response data
+          const data = await response.json();
+          
+          // Add assistant's response
+          setMessages(prev => [...prev, {
+            role: 'assistant' as const,
+            content: data.reply || "I'm sorry, I couldn't process that request.",
+            id: generateId()
+          }]);
         } catch (error) {
-          console.error('Failed to parse API response:', error);
-          throw new Error('Invalid response from server');
+          console.error('Error sending message to chat API:', error);
+          toast.error('Falha ao processar mensagem. Por favor, tente novamente.');
+          
+          // Add error response
+          setMessages(prev => [...prev, {
+            role: 'assistant' as const,
+            content: "I'm sorry, there was an error processing your message. Please try again.",
+            id: generateId()
+          }]);
         }
-        
-        // Add assistant's response
-        setMessages(prev => [...prev, {
-          role: 'assistant' as const,
-          content: data.reply || "I'm sorry, I couldn't process that request.",
-          id: generateId()
-        }]);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('General error in message handling:', error);
       toast.error('Falha ao enviar mensagem. Por favor, tente novamente.');
       
       // Add error response
@@ -229,7 +227,11 @@ const ChatInterface: React.FC = () => {
       dataTransfer.items.add(file);
       
       // Process the audio file with the message text
-      const result = await processFileUpload(file, 'https://max-zeta-eight.vercel.app/api/upload', messageText);
+      const result = await processFileUpload(
+        file, 
+        `${window.location.origin}/api/upload`, 
+        messageText
+      );
       
       if (!result.success) {
         toast.error(`Erro ao processar áudio: ${result.error}`);
@@ -265,7 +267,7 @@ const ChatInterface: React.FC = () => {
       } else {
         // If there was a message, process it with the API
         try {
-          const response = await fetch('https://max-zeta-eight.vercel.app/api/chat', {
+          const response = await fetch(`${window.location.origin}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -276,26 +278,11 @@ const ChatInterface: React.FC = () => {
           });
           
           if (!response.ok) {
-            const errorText = await response.text();
-            let errorMessage;
-            try {
-              const parsedError = JSON.parse(errorText);
-              errorMessage = parsedError.error || 'Failed to send message';
-            } catch (e) {
-              errorMessage = errorText || 'Failed to send message';
-            }
-            throw new Error(errorMessage);
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to send message');
           }
           
-          // Parse the response text once
-          const responseText = await response.text();
-          let data;
-          try {
-            data = JSON.parse(responseText);
-          } catch (error) {
-            console.error('Failed to parse API response:', error);
-            throw new Error('Invalid response from server');
-          }
+          const data = await response.json();
           
           // Add assistant's response
           setMessages(prev => [...prev, {
@@ -304,7 +291,7 @@ const ChatInterface: React.FC = () => {
             id: generateId()
           }]);
         } catch (error) {
-          console.error('Error sending message:', error);
+          console.error('Error sending message with audio:', error);
           toast.error('Falha ao processar mensagem com gravação. Por favor, tente novamente.');
           
           // Add error response to the chat
@@ -492,4 +479,3 @@ const ChatInterface: React.FC = () => {
 };
 
 export default ChatInterface;
-
