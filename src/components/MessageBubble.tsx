@@ -2,6 +2,8 @@
 import React from 'react';
 import { Message } from '../types/chat';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface MessageBubbleProps {
   message: Message;
@@ -21,7 +23,16 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           ? "bg-primary text-primary-foreground" 
           : "bg-muted text-foreground"
       )}>
-        <div className="whitespace-pre-wrap">{message.content}</div>
+        {isUser ? (
+          <div className="whitespace-pre-wrap">{message.content}</div>
+        ) : (
+          <ReactMarkdown
+            className="prose prose-sm dark:prose-invert max-w-none"
+            remarkPlugins={[remarkGfm]}
+          >
+            {message.content}
+          </ReactMarkdown>
+        )}
       </div>
     </div>
   );

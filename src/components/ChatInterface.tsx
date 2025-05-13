@@ -71,7 +71,7 @@ const ChatInterface: React.FC = () => {
       
       const data = await response.json();
       
-      // Add assistant's response
+      // Add assistant's response - preserving markdown formatting
       setMessages(prev => [...prev, {
         role: 'assistant' as const,
         content: data.reply || "I'm sorry, I couldn't process that request.",
