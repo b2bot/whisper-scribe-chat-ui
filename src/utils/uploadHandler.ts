@@ -1,125 +1,141 @@
-
-import { Buffer } from "buffer";
-
 interface UploadResult {
   success: boolean;
-  url?: string;
   content?: string;
-  fileContent?: string;
+  url?: string;
   error?: string;
+  message?: string;
 }
 
-/**
- * Process file upload to server
- */
-async function processFileUpload(file: File, endpoint: string, message: string): Promise<UploadResult> {
-  const formData = new FormData();
-  formData.append("message", message);
-  formData.append("file", file);
-
-  try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      // Handle HTTP error status
-      let errorMessage = `HTTP error ${response.status}`;
-      try {
-        const errorText = await response.text();
-        console.error("HTTP Error:", response.status, errorText);
-        errorMessage = errorText || errorMessage;
-      } catch (err) {
-        console.error("Error reading error response:", err);
-      }
-      return { success: false, error: errorMessage };
-    }
-
-    // Parse response as JSON
-    try {
-      const data = await response.json();
-      return {
-        success: true,
-        content: data?.content || "",
-        fileContent: data?.content || "",
-        url: data?.url || "",
-      };
-    } catch (err) {
-      console.error("Error parsing JSON response:", err);
-      return { 
-        success: false, 
-        error: "Failed to parse server response" 
-      };
-    }
-  } catch (error: any) {
-    console.error("Error processing upload:", error);
-    return {
-      success: false,
-      error: error?.message || "Unknown upload error"
-    };
-  }
-}
-
-/**
- * Send message with file attachments
- */
-async function sendMessageWithFiles(message: string, files: File | File[], endpoint: string): Promise<UploadResult> {
-  const formData = new FormData();
-  formData.append("message", message);
+export const processFileUpload = async (
+  file: File,
+  apiEndpoint: string,
+  message?: string
+): Promise<UploadResult> => {
+  console.log('Processing file upload:', file.name, 'type:', file.type, 'size:', Math.round(file.size / 1024), 'KB');
   
-  // Handle both single file and array of files
-  if (Array.isArray(files)) {
-    files.forEach(file => {
-      formData.append("file", file);
-    });
-  } else {
-    formData.append("file", files);
-  }
-
   try {
+    // Check file size before attempting upload (client-side validation)
+    if (file.size > 15 * 1024 * 1024) { // 15MB limit
+      console.error('File too large:', file.name, 'size:', Math.round(file.size / 1024), 'KB');
+      return {
+        success: false,
+        error: `File too large (${Math.round(file.size / (1024 * 1024))}MB). Maximum size is 15MB.`,
+      };
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Add the message to the form data if provided
+    if (message && message.trim()) {
+      formData.append('message', message.trim());
+    }
+    
+    // Use the current domain for API calls instead of hardcoded URLs
+    const currentDomain = window.location.origin;
+    const endpoint = apiEndpoint.startsWith('http') 
+      ? apiEndpoint 
+      : `${currentDomain}/api/upload`;
+    
+    console.log('Uploading to endpoint:', endpoint);
+    
     const response = await fetch(endpoint, {
-      method: "POST",
+      method: 'POST',
       body: formData,
     });
 
     if (!response.ok) {
-      // Handle HTTP error status
-      let errorMessage = `HTTP error ${response.status}`;
+      let errorText;
       try {
-        const errorText = await response.text();
-        console.error("HTTP Error:", response.status, errorText);
-        errorMessage = errorText || errorMessage;
-      } catch (err) {
-        console.error("Error reading error response:", err);
+        // Try to parse the error as JSON
+        const errorData = await response.json();
+        errorText = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+      } catch (e) {
+        // If JSON parsing fails, get the error as text
+        errorText = await response.text();
       }
-      return { success: false, error: errorMessage };
+      
+      console.error('Upload error response:', errorText, 'Status:', response.status);
+      
+      // Special handling for common errors
+      if (response.status === 413) {
+        return {
+          success: false,
+          error: `File too large. Maximum size is 15MB. Current file: ${Math.round(file.size / (1024 * 1024))}MB.`,
+        };
+      }
+      
+      return {
+        success: false,
+        error: errorText || `HTTP ${response.status}: ${response.statusText}`,
+      };
     }
 
-    // Parse response as JSON
-    try {
-      const data = await response.json();
-      return {
-        success: true,
-        content: data?.content || "",
-        fileContent: data?.content || "",
-        url: data?.url || "",
-      };
-    } catch (err) {
-      console.error("Error parsing JSON response:", err);
-      return { 
-        success: false, 
-        error: "Failed to parse server response" 
-      };
-    }
-  } catch (error: any) {
-    console.error("Error sending files:", error);
+    const data = await response.json();
+    console.log('Upload success, data:', data);
+
+    return {
+      success: true,
+      content: data.content || '',
+      url: data.url || '',
+      message: data.message || '',
+    };
+  } catch (error) {
+    console.error('Upload failed:', error);
     return {
       success: false,
-      error: error?.message || "Unknown error sending file"
+      error: error instanceof Error ? error.message : 'Unknown error during upload',
     };
   }
-}
+};
 
-// Export with correct names as used in ChatInterface
-export { processFileUpload, sendMessageWithFiles };
+// New function to handle sending message with files
+export const sendMessageWithFiles = async (
+  message: string,
+  files: File[],
+  apiEndpoint: string
+): Promise<{success: boolean, error?: string}> => {
+  console.log(`Sending message with ${files.length} files`);
+  
+  try {
+    if (files.length === 0) {
+      // If no files, just return success to let the regular message flow continue
+      return { success: true };
+    }
+    
+    // Check if any file exceeds the size limit
+    for (const file of files) {
+      if (file.size > 15 * 1024 * 1024) { // 15MB limit
+        return {
+          success: false,
+          error: `File too large: ${file.name} (${Math.round(file.size / (1024 * 1024))}MB). Maximum size is 15MB.`,
+        };
+      }
+    }
+    
+    // Process all files with the message
+    const results = await Promise.all(
+      files.map((file, index) => 
+        // Only send the message with the first file
+        processFileUpload(file, apiEndpoint, index === 0 ? message : undefined)
+      )
+    );
+    
+    // Check if any uploads failed
+    const failedUploads = results.filter(result => !result.success);
+    if (failedUploads.length > 0) {
+      return {
+        success: false,
+        error: failedUploads.map(r => r.error).join('; '),
+      };
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send message with files:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error processing files',
+    };
+  }
+};
