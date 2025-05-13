@@ -46,14 +46,17 @@ export const processFileUpload = async (
     });
 
     if (!response.ok) {
+      // Store response data as a variable that can be used as either text or JSON
+      const responseData = await response.text();
       let errorText;
+      
       try {
         // Try to parse the error as JSON
-        const errorData = await response.json();
+        const errorData = JSON.parse(responseData);
         errorText = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
       } catch (e) {
-        // If JSON parsing fails, get the error as text
-        errorText = await response.text();
+        // If JSON parsing fails, use the text directly
+        errorText = responseData;
       }
       
       console.error('Upload error response:', errorText, 'Status:', response.status);
@@ -72,7 +75,19 @@ export const processFileUpload = async (
       };
     }
 
-    const data = await response.json();
+    // Parse the response once and store the result
+    const responseText = await response.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (error) {
+      console.error('Failed to parse JSON response:', error);
+      return {
+        success: false,
+        error: 'Invalid server response format'
+      };
+    }
+    
     console.log('Upload success, data:', data);
 
     return {
