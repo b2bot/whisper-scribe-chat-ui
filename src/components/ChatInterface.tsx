@@ -82,8 +82,8 @@ const ChatInterface: React.FC = () => {
         
         // Process the message with files
         const result = await sendMessageWithFiles(
-          input, 
-          selectedFiles,
+          input,
+          selectedFiles[0], // Send just the first file for now
           `${window.location.origin}/api/upload`
         );
         
@@ -94,21 +94,50 @@ const ChatInterface: React.FC = () => {
         }
         
         // Store file content to send to assistant
-        fileContent = result.fileContent || '';
+        fileContent = result.fileContent || result.content || '';
         
         // Clear files after successful upload
         setSelectedFiles([]);
         setShowUploader(false);
         
-        // Only if the user didn't provide a message, add the standard "processed files" response
-        if (!hasMessage) {
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: `I've processed ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''}. How can I help you with them?`,
-            id: generateId()
-          }]);
-          setIsProcessing(false);
-          return;
+        // Proceed to send message to the chat API with the file content
+        if (hasMessage || fileContent) {
+          try {
+            const response = await fetch(`${window.location.origin}/api/chat`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                message: input.trim() || "Please analyze this content",
+                history: messages.map(m => ({ role: m.role, content: m.content })),
+                fileContent: fileContent // Pass the extracted file content
+              }),
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(errorText || 'Failed to send message');
+            }
+            
+            // Parse the response data
+            const data = await response.json();
+            
+            // Add assistant's response
+            setMessages(prev => [...prev, {
+              role: 'assistant' as const,
+              content: data.reply || "I'm sorry, I couldn't process that request.",
+              id: generateId()
+            }]);
+          } catch (error) {
+            console.error('Error sending message to chat API:', error);
+            toast.error('Falha ao processar mensagem. Por favor, tente novamente.');
+            
+            // Add error response
+            setMessages(prev => [...prev, {
+              role: 'assistant' as const,
+              content: "I'm sorry, there was an error processing your message. Please try again.",
+              id: generateId()
+            }]);
+          }
         }
       } else if (hasMessage) {
         // If we only have a message, process it normally
@@ -120,18 +149,15 @@ const ChatInterface: React.FC = () => {
         
         setMessages(prev => [...prev, newMessage]);
         setInput('');
-      }
-      
-      // Send message to API for processing
-      if (hasMessage || (hasFiles && fileContent)) {
+        
+        // Send message to API for processing
         try {
           const response = await fetch(`${window.location.origin}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              message: input.trim() || "Please analyze this content",
+              message: input.trim(),
               history: messages.map(m => ({ role: m.role, content: m.content })),
-              fileContent: fileContent // Pass the extracted file content
             }),
           });
           
@@ -255,31 +281,23 @@ const ChatInterface: React.FC = () => {
       // Add the message to the chat
       setMessages(prev => [...prev, userMessage]);
       
-      // Only if we don't have a message text, add the assistant response
-      if (!messageText) {
-        // Add assistant response
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `I've processed your audio recording. How can I help with it?`,
-          id: generateId()
-        }]);
-        setIsProcessing(false);
-      } else {
-        // If there was a message, process it with the API
+      // Send to chat API if there's message text or content
+      const fileContent = result.fileContent || result.content || '';
+      if (messageText || fileContent) {
         try {
           const response = await fetch(`${window.location.origin}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-              message: messageText,
+              message: messageText || "Please analyze this audio recording",
               history: messages.map(m => ({ role: m.role, content: m.content })),
-              fileContent: result.content // Pass the extracted file content
+              fileContent: fileContent
             }),
           });
           
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to send message');
+            const errorData = await response.text();
+            throw new Error(errorData || 'Failed to send message');
           }
           
           const data = await response.json();
@@ -300,15 +318,13 @@ const ChatInterface: React.FC = () => {
             content: "I'm sorry, there was an error processing your audio message. Please try again.",
             id: generateId()
           }]);
-        } finally {
-          setIsProcessing(false);
         }
       }
     } catch (error) {
       console.error('Error processing audio:', error);
       toast.error('Falha ao processar áudio. Por favor, tente novamente.');
-      setIsProcessing(false);
     } finally {
+      setIsProcessing(false);
       setRecordedChunks([]);
     }
   };

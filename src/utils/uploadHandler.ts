@@ -1,18 +1,21 @@
+
 import { Buffer } from "buffer";
-import pdfParse from "pdf-parse";
 
 interface UploadResult {
   success: boolean;
   url?: string;
   content?: string;
+  fileContent?: string;
   error?: string;
 }
 
-// Função 1 — chamada como: processFileUpload
-async function processUpload(file: File, endpoint: string, message: string): Promise<UploadResult> {
+/**
+ * Process file upload to server
+ */
+async function processFileUpload(file: File, endpoint: string, message: string): Promise<UploadResult> {
   const formData = new FormData();
   formData.append("message", message);
-  formData.append("files", file);
+  formData.append("file", file);
 
   try {
     const response = await fetch(endpoint, {
@@ -21,31 +24,58 @@ async function processUpload(file: File, endpoint: string, message: string): Pro
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erro HTTP:", errorText);
-      return { success: false, error: errorText };
+      // Handle HTTP error status
+      let errorMessage = `HTTP error ${response.status}`;
+      try {
+        const errorText = await response.text();
+        console.error("HTTP Error:", response.status, errorText);
+        errorMessage = errorText || errorMessage;
+      } catch (err) {
+        console.error("Error reading error response:", err);
+      }
+      return { success: false, error: errorMessage };
     }
 
-    const data = await response.json();
-    return {
-      success: true,
-      content: data?.content || "",
-      url: data?.url || "",
-    };
+    // Parse response as JSON
+    try {
+      const data = await response.json();
+      return {
+        success: true,
+        content: data?.content || "",
+        fileContent: data?.content || "",
+        url: data?.url || "",
+      };
+    } catch (err) {
+      console.error("Error parsing JSON response:", err);
+      return { 
+        success: false, 
+        error: "Failed to parse server response" 
+      };
+    }
   } catch (error: any) {
-    console.error("Erro ao processar upload:", error);
+    console.error("Error processing upload:", error);
     return {
       success: false,
-      error: error?.message || "Erro desconhecido no upload"
+      error: error?.message || "Unknown upload error"
     };
   }
 }
 
-// Função 2 — usada no ChatInterface.tsx
-async function sendMessageWithFiles(message: string, file: File, endpoint: string): Promise<UploadResult> {
+/**
+ * Send message with file attachments
+ */
+async function sendMessageWithFiles(message: string, files: File | File[], endpoint: string): Promise<UploadResult> {
   const formData = new FormData();
   formData.append("message", message);
-  formData.append("files", file);
+  
+  // Handle both single file and array of files
+  if (Array.isArray(files)) {
+    files.forEach(file => {
+      formData.append("file", file);
+    });
+  } else {
+    formData.append("file", files);
+  }
 
   try {
     const response = await fetch(endpoint, {
@@ -54,25 +84,42 @@ async function sendMessageWithFiles(message: string, file: File, endpoint: strin
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Erro HTTP:", errorText);
-      return { success: false, error: errorText };
+      // Handle HTTP error status
+      let errorMessage = `HTTP error ${response.status}`;
+      try {
+        const errorText = await response.text();
+        console.error("HTTP Error:", response.status, errorText);
+        errorMessage = errorText || errorMessage;
+      } catch (err) {
+        console.error("Error reading error response:", err);
+      }
+      return { success: false, error: errorMessage };
     }
 
-    const data = await response.json();
-    return {
-      success: true,
-      content: data?.content || "",
-      url: data?.url || "",
-    };
+    // Parse response as JSON
+    try {
+      const data = await response.json();
+      return {
+        success: true,
+        content: data?.content || "",
+        fileContent: data?.content || "",
+        url: data?.url || "",
+      };
+    } catch (err) {
+      console.error("Error parsing JSON response:", err);
+      return { 
+        success: false, 
+        error: "Failed to parse server response" 
+      };
+    }
   } catch (error: any) {
-    console.error("Erro ao enviar arquivos:", error);
+    console.error("Error sending files:", error);
     return {
       success: false,
-      error: error?.message || "Erro desconhecido ao enviar arquivo"
+      error: error?.message || "Unknown error sending file"
     };
   }
 }
 
-// Exportações conforme esperado por ChatInterface.tsx
-export { processUpload as processFileUpload, sendMessageWithFiles };
+// Export with correct names as used in ChatInterface
+export { processFileUpload, sendMessageWithFiles };

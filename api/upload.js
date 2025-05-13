@@ -11,13 +11,14 @@ export const config = {
 
 async function extractFileContent(file) {
   try {
-    // Read the file contents into a buffer
-    const fileBuffer = require('fs').readFileSync(file.filepath);
+    // Read the file buffer directly from the filepath
+    const fs = require('fs');
+    const fileBuffer = fs.readFileSync(file.filepath);
     
     // Check file type and extract content accordingly
     if (file.mimetype === 'application/pdf') {
       try {
-        // Extract text from PDF using the buffer directly
+        // Parse PDF directly from buffer, not using pdf-parse's internal file loading
         const pdfData = await pdfParse(fileBuffer);
         return pdfData.text;
       } catch (pdfError) {
@@ -25,13 +26,13 @@ async function extractFileContent(file) {
         return `[Error parsing PDF: ${file.originalFilename}]`;
       }
     } else if (file.mimetype?.startsWith('text/') || file.mimetype === 'application/json') {
-      // For text files, just return the content
+      // For text files, return the content directly
       return fileBuffer.toString('utf8');
     } else if (file.mimetype?.startsWith('audio/')) {
-      // For audio files we would ideally transcribe them, but for now just notify
+      // For audio files we would ideally transcribe them
       return `[Audio file uploaded: ${file.originalFilename}]`;
     } else if (file.mimetype?.startsWith('image/')) {
-      // For images we would ideally describe them, but for now just notify
+      // For images
       return `[Image file uploaded: ${file.originalFilename}]`;
     }
     
@@ -44,7 +45,10 @@ async function extractFileContent(file) {
 }
 
 export default async function handler(req, res) {
-  // CORS HEADERS - More permissive for development/testing
+  // Always set content type to ensure proper JSON response
+  res.setHeader('Content-Type', 'application/json');
+  
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
@@ -71,26 +75,24 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Error parsing form data' });
       }
 
-      const file = files.file;
+      const fileArray = files.file;
       const message = fields.message ? fields.message[0] : '';
 
-      if (!file || !file[0]) {
+      if (!fileArray || !fileArray[0]) {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
       try {
         // Extract content from file
-        const fileContent = await extractFileContent(file[0]);
+        const fileContent = await extractFileContent(fileArray[0]);
         
-        // For demonstration, create a dummy URL pointing to a public file
-        // In a real app, you'd upload to a storage service and return the URL
-        const url = `/dummy-url/${file[0].originalFilename}`;
+        // For demonstration, create a dummy URL
+        const url = `/files/${fileArray[0].originalFilename}`;
 
         return res.status(200).json({ 
           success: true, 
           content: fileContent, 
           url,
-          // Include the user message in the response if provided
           message: message || '' 
         });
       } catch (error) {
