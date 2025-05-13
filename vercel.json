@@ -1,3 +1,4 @@
+
 {
   "headers": [
     {
@@ -28,8 +29,8 @@
   ],
   "functions": {
     "api/upload.js": {
-      "maxDuration": 120,
-      "memory": 3008
+      "maxDuration": 60,
+      "memory": 1024
     },
     "api/chat.js": {
       "maxDuration": 60,
