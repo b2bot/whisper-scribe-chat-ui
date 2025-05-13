@@ -1,5 +1,5 @@
-import { Buffer } from 'buffer';
-import pdfParse from 'pdf-parse';
+import { Buffer } from "buffer";
+import pdfParse from "pdf-parse";
 
 interface UploadResult {
   success: boolean;
@@ -8,11 +8,11 @@ interface UploadResult {
   error?: string;
 }
 
-// Função para processar upload com mensagem e arquivos
+// Função principal de upload com mensagem e arquivo
 export async function processUpload(file: File, endpoint: string, message: string): Promise<UploadResult> {
   const formData = new FormData();
-  formData.append("files", file);
   formData.append("message", message);
+  formData.append("files", file);
 
   try {
     const response = await fetch(endpoint, {
@@ -29,9 +29,10 @@ export async function processUpload(file: File, endpoint: string, message: strin
     const data = await response.json();
     return {
       success: true,
-      content: data?.content || '',
-      url: data?.url || '',
+      content: data?.content || "",
+      url: data?.url || "",
     };
+
   } catch (error: any) {
     console.error("Erro ao processar upload:", error);
     return {
