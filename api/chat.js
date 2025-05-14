@@ -1,77 +1,87 @@
 import { OpenAI } from "openai";
 
-// Create an OpenAI API client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// REMOVED: export const config = { runtime: "edge", maxDuration: 60 };
-// This will now default to Node.js runtime
+const ASSISTANT_ID = "asst_AuDZYQqTdkgS5cUMt2eHP1q0";
 
 export default async function handler(req, res) {
-  console.log("API_CHAT_HANDLER_NODE: Request received");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
+  // Handle preflight (CORS) requests
   if (req.method === "OPTIONS") {
-    console.log("API_CHAT_HANDLER_NODE: Handling OPTIONS request");
-    res.status(200).setHeader("Access-Control-Allow-Origin", "*").setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS").setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization").end();
-    return;
+    return res.status(200).end();
   }
 
   if (req.method !== "POST") {
-    console.warn(`API_CHAT_HANDLER_NODE: Method not allowed: ${req.method}`);
-    res.status(405).json({ error: "Method not allowed" });
-    return;
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // req.body should be automatically parsed by Vercel for Node.js functions if Content-Type is application/json
-    const { messages, files } = req.body;
-    console.log("API_CHAT_HANDLER_NODE: Request body parsed:", { messages, files });
-
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      console.warn("API_CHAT_HANDLER_NODE: Invalid messages format or empty messages array");
-      res.status(400).json({ error: "Invalid messages format" });
-      return;
+    console.log("Chat API request received");
+    const { message } = req.body;
+    
+    if (!message || typeof message !== 'string') {
+      console.error("Invalid message format", message);
+      return res.status(400).json({ error: "Invalid message format. Message is required and must be a string." });
     }
 
-    let systemMessageContent = "You are a helpful assistant.";
-    if (files && files.length > 0) {
-      systemMessageContent += "\n\nThe user has uploaded the following files (content provided if text-based):\n";
-      files.forEach(file => {
-        systemMessageContent += `\n- ${file.name}`;
-        if (file.content && typeof file.content === "string") {
-          systemMessageContent += `:\n---\n${file.content}\n---
-`;
-        }
-      });
-    }
-
-    const openAIMessages = [
-      { role: "system", content: systemMessageContent },
-      ...messages.map((msg) => ({ role: msg.role, content: msg.content })),
-    ];
-
-    console.log("API_CHAT_HANDLER_NODE: Sending request to OpenAI with messages:", JSON.stringify(openAIMessages, null, 2));
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: openAIMessages,
-      stream: false,
+    console.log("Creating thread");
+    const thread = await openai.beta.threads.create();
+    
+    console.log("Adding message to thread", thread.id);
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: message,
     });
 
-    const assistantResponse = completion.choices[0]?.message?.content;
-    console.log("API_CHAT_HANDLER_NODE: Received response from OpenAI:", assistantResponse);
+    console.log("Creating run with assistant", ASSISTANT_ID);
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: ASSISTANT_ID,
+    });
 
-    if (!assistantResponse) {
-      console.error("API_CHAT_HANDLER_NODE: OpenAI response was empty or malformed");
-      res.status(500).json({ error: "Failed to get response from AI" });
-      return;
+    console.log("Run created", run.id);
+    let completedRun;
+    let attempts = 0;
+    const maxAttempts = 30; // 30 seconds max
+    
+    while (attempts < maxAttempts) {
+      completedRun = await openai.beta.threads.runs.retrieve(thread.id, run.id);
+      console.log("Run status:", completedRun.status);
+      
+      if (completedRun.status === "completed") break;
+      if (completedRun.status === "failed" || completedRun.status === "cancelled" || completedRun.status === "expired") {
+        throw new Error(`Run failed with status: ${completedRun.status}`);
+      }
+      
+      await new Promise((r) => setTimeout(r, 1000));
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      throw new Error("Request timed out waiting for response");
     }
 
-    res.status(200).json({ response: assistantResponse });
+    console.log("Getting messages from thread");
+    const messages = await openai.beta.threads.messages.list(thread.id);
+    const response = messages.data.find((msg) => msg.role === "assistant");
 
-  } catch (e) {
-    console.error("API_CHAT_HANDLER_NODE: Error in chat handler:", e);
-    res.status(500).json({ error: "Failed to process message", details: e.message });
+    if (!response || !response.content || !response.content[0] || !response.content[0].text) {
+      throw new Error("No valid response received from assistant");
+    }
+
+    const reply = response.content[0].text.value;
+    console.log("Reply received, length:", reply.length);
+    
+    res.status(200).json({ reply });
+  } catch (error) {
+    console.error("API Error:", error);
+    res.status(500).json({ 
+      error: "Error processing your request.", 
+      details: error.message 
+    });
   }
 }
