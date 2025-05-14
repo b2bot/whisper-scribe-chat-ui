@@ -1,4 +1,5 @@
 {
+  "framework": "vite",
   "headers": [
     {
       "source": "/(.*)",
@@ -26,7 +27,7 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/(.*) ",
       "headers": [
         {
           "key": "Content-Type",
