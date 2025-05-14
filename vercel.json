@@ -1,7 +1,4 @@
 {
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/(.*)",
@@ -29,7 +26,7 @@
       ]
     },
     {
-      "source": "/api/(.*) ",
+      "source": "/api/(.*)",
       "headers": [
         {
           "key": "Content-Type",
@@ -40,7 +37,7 @@
   ],
   "functions": {
     "api/chat.js": {
-      "maxDuration": 60,
+      "maxDuration": 120,
       "memory": 3008
     }
   }
