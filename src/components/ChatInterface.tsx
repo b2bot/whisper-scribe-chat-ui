@@ -17,7 +17,7 @@ const ChatInterface: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // !! IMPORTANTE: Substitua pela URL base do seu deploy na Vercel !!
-  const VERCEL_API_URL = 'https://SEU-PROJETO-ID.vercel.app'; // Ex: https://max-zeta-eight.vercel.app
+  const VERCEL_API_URL = 'https://max-zeta-eight.vercel.app'; // Ex: https://max-zeta-eight.vercel.app
 
   const scrollToBottom = ( ) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
