@@ -1,25 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader, Send } from 'lucide-react'; // Paperclip removido
+import { Loader, Send } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { toast } from '@/components/ui/sonner';
 import { useUser } from '../contexts/UserContext';
 import { UserSelector } from './UserSelector';
 import { ChatControls } from './ChatControls';
 import { Message } from '../types/chat';
-// FileUploader e lógica relacionada removidos
 
 const ChatInterface: React.FC = () => {
   const { messages, setMessages } = useUser();
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  // selectedFiles e showUploader removidos
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  // !! IMPORTANTE: Substitua pela URL base do seu deploy na Vercel !!
+  const VERCEL_API_URL = 'https://SEU-PROJETO-ID.vercel.app'; // Ex: https://max-zeta-eight.vercel.app
+
+  const scrollToBottom = ( ) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -53,14 +53,12 @@ const ChatInterface: React.FC = () => {
         content: m.content
       }));
 
-      // ATENÇÃO: Se for usar um backend em outra URL (ex: Vercel), ajuste o fetch abaixo
-      // Ex: const response = await fetch('https://SEU-PROJETO.vercel.app/api/chat', {
-      const response = await fetch('/api/chat', { // Mantido como /api/chat para deploy unificado ou proxy
+      const response = await fetch(`${VERCEL_API_URL}/api/chat`, { // Usando a URL completa
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: currentMessagesForApi,
-        } ),
+        }),
       });
 
       if (!response.ok) {
@@ -108,6 +106,8 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
+    // ... (o restante do JSX permanece o mesmo que na minha mensagem anterior)
+    // Certifique-se de que o JSX para a interface do chat esteja aqui
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <UserSelector />
