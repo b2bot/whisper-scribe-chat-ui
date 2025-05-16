@@ -114,15 +114,15 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <UserSelector />
         <h1 className="text-xl font-semibold text-center">Max Leadclinic</h1>
         <ChatControls /> 
       </div>
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(100% - 140px)' }}>
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[200px] text-muted-foreground">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <p className="text-lg font-medium">Olá, tudo bem?</p>
             <p className="text-sm">Estou aqui para te ajudar com insights, tarefas e estratégias de marketing para a Leadclinic. Fale comigo como um colega de equipe.</p>
           </div>
@@ -152,7 +152,7 @@ const ChatInterface: React.FC = () => {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Digite sua mensagem..."
-            className="flex-1 min-h-[60px] max-h-[120px] resize-none"
+            className="flex-1 min-h-[60px] resize-none"
             disabled={isProcessing}
           />
           {/* Removed Paperclip button */}
