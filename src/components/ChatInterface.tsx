@@ -1,25 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader, Send } from 'lucide-react'; // Removed Paperclip
+import { Loader, Send } from 'lucide-react';
 import { MessageBubble } from './MessageBubble';
 import { toast } from '@/components/ui/sonner';
 import { useUser } from '../contexts/UserContext';
 import { UserSelector } from './UserSelector';
 import { ChatControls } from './ChatControls';
 import { Message } from '../types/chat';
-// Removed FileUploader and related imports like readFileAsText
 
 const ChatInterface: React.FC = () => {
   const { messages, setMessages } = useUser();
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  // Removed selectedFiles and showUploader states
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  // !! IMPORTANTE: Substitua pela URL base do seu deploy na Vercel !!
+  const VERCEL_API_URL = 'https://max-zeta-eight.vercel.app'; // Ex: https://max-zeta-eight.vercel.app
+
+  const scrollToBottom = ( ) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -33,7 +33,7 @@ const ChatInterface: React.FC = () => {
 
   const handleSendMessage = async () => {
     const userMessageContent = input.trim();
-    if (!userMessageContent) { // Condition simplified: only check for text input
+    if (!userMessageContent) {
       toast.error("Por favor, digite uma mensagem para enviar.");
       return;
     }
@@ -48,19 +48,16 @@ const ChatInterface: React.FC = () => {
     setInput('');
 
     try {
-      // Removed all logic related to filesData and selectedFiles
-
       const currentMessagesForApi = [...messages, userMessage].map(m => ({
         role: m.role,
         content: m.content
       }));
 
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${VERCEL_API_URL}/api/chat`, { // Usando a URL completa
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: currentMessagesForApi,
-          // files: filesData, // Removed files from API payload
         }),
       });
 
@@ -74,13 +71,10 @@ const ChatInterface: React.FC = () => {
           try {
             const errorText = await response.text();
             errorPayload.details = errorText || 'Could not parse error response as JSON or text.';
-            console.error('Error response from API (not JSON, fallback to text):', errorText);
           } catch (textParseError) {
-            console.error('Failed to parse error response as JSON or text:', textParseError);
             errorPayload.details = 'Failed to parse error response body.';
           }
         }
-        console.error('Full error payload from API:', errorPayload);
         throw new Error(`${errorPayload.error}${errorPayload.details ? ": " + errorPayload.details : ''}`);
       }
 
@@ -90,10 +84,8 @@ const ChatInterface: React.FC = () => {
         content: data.response || "Desculpe, não consegui processar essa solicitação.",
         id: generateId()
       }]);
-      // setSelectedFiles([]); // Removed as selectedFiles is removed
 
     } catch (error: any) {
-      console.error('Error sending message:', error);
       const errorMessage = error.message || 'Falha ao enviar mensagem. Por favor, tente novamente.';
       toast.error(errorMessage);
       setMessages(prev => [...prev, {
@@ -114,6 +106,8 @@ const ChatInterface: React.FC = () => {
   };
 
   return (
+    // ... (o restante do JSX permanece o mesmo que na minha mensagem anterior)
+    // Certifique-se de que o JSX para a interface do chat esteja aqui
     <div className="flex flex-col h-screen overflow-hidden">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <UserSelector />
@@ -145,7 +139,6 @@ const ChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       <div className="p-4 border-t border-border">
-        {/* Removed FileUploader section entirely */}
         <div className="flex items-end space-x-2">
           <Textarea
             value={input}
@@ -155,10 +148,9 @@ const ChatInterface: React.FC = () => {
             className="flex-1 min-h-[60px] resize-none"
             disabled={isProcessing}
           />
-          {/* Removed Paperclip button */}
           <Button
             onClick={handleSendMessage}
-            disabled={isProcessing || input.trim() === ''} // Condition simplified
+            disabled={isProcessing || input.trim() === ''}
             className="self-center"
             title="Send message"
           >
